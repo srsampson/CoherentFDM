@@ -53,7 +53,7 @@ public final class CodebookVQ implements IDefines {
 
         int index = 0;
         while (m_scanner.hasNextFloat()) {
-            m_codes0.set(index, m_scanner.nextFloat());
+            m_codes0.add(index, m_scanner.nextFloat());
             index++;
         }
 
@@ -73,7 +73,7 @@ public final class CodebookVQ implements IDefines {
 
         index = 0;
         while (m_scanner.hasNextFloat()) {
-            m_codes1.set(index, m_scanner.nextFloat());
+            m_codes1.add(index, m_scanner.nextFloat());
             index++;
         }
         
