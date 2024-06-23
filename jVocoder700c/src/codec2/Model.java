@@ -32,7 +32,7 @@ public final class Model implements IDefines {
     /*
      * Class to hold model parameters for one 10 ms frame
      */
-    public Model() {
+    protected Model() {
         m_rand = new Random(System.currentTimeMillis());     // seed the noise generator
         m_phi = new float[MAX_HARMONIC+1];  // 0..80
         m_A = new float[MAX_HARMONIC+1];
@@ -41,50 +41,50 @@ public final class Model implements IDefines {
         m_voiced = false;
     }
 
-    public void reset() {
+    protected void reset() {
         for (int i = 0; i <= MAX_HARMONIC; i++) {
             m_A[i] = 0.0f;
             m_phi[i] = 0.0f;
         }
     }
 
-    public boolean getVoiced() {
+    protected boolean getVoiced() {
         return m_voiced;
     }
 
-    public void setVoiced(boolean val) {
+    protected void setVoiced(boolean val) {
         m_voiced = val;
     }
 
-    public float getA(int index) {
+    protected float getA(int index) {
         return m_A[index];
     }
 
-    public void setA(int index, float val) {
+    protected void setA(int index, float val) {
         m_A[index] = val;
     }
 
-    public float getPhi(int index) {
+    protected float getPhi(int index) {
         return m_phi[index];
     }
 
-    public void setPhi(int index, float val) {
+    protected void setPhi(int index, float val) {
         m_phi[index] = val;
     }
 
-    public int getL() {
+    protected int getL() {
         return m_L;
     }
 
-    public void setL(int val) {
+    protected void setL(int val) {
         m_L = val;
     }
 
-    public float getWo() {
+    protected float getWo() {
         return m_Wo;
     }
 
-    public void setWo(float val) {
+    protected void setWo(float val) {
         m_Wo = val;
     }
 
@@ -93,7 +93,7 @@ public final class Model implements IDefines {
      * background noise. Unlike mixed-excitation models requires no bits to be
      * transmitted to handle background noise.
      */
-    public float postfilter(float bg_est_val) {
+    protected float postfilter(float bg_est_val) {
         float bg_est = bg_est_val;
         float e = 1E-12f;
 
@@ -125,7 +125,7 @@ public final class Model implements IDefines {
      * parameters are required apart from the SNR (which can be reduced to a 1
      * bit V/UV decision per frame).
      */
-    public float phase_synth_zero_order(float ex_phase_val, Complex[] Aw) {
+    protected float phase_synth_zero_order(float ex_phase_val, Complex[] Aw) {
         float ex_phase = ex_phase_val;
         Complex Ex;
 

@@ -12,13 +12,13 @@ package codec2;
 
 import complex.Complex;
 import complex.ComplexMath;
+import java.util.ArrayList;
 
 public final class Amp implements IDefines {
 
     private static final int NS = (AMP_PHASE_NFFT / 2 + 1);
     private static final int MBEST_ENTRIES = 5;
     private static final int MBEST_STAGES = 4;
-    private static final int AMP_K = 20;
     //
     private static final float WO_MIN = (float) Math.log10((TAU / P_MAX));
     private static final float WO_MAX = (float) Math.log10((TAU / P_MIN));
@@ -28,14 +28,7 @@ public final class Amp implements IDefines {
     private static final float MELSTEP = (MEL3700 - MEL200);
     private static final float PHASE_SCALE = (float) (20.0 / Math.log(10.0));
     //
-    private static final byte[] IDEAL = {
-        8, 10, 12, 14, 14, 14, 14,
-        14, 14, 14, 14, 14, 14, 14,
-        14, 14, 14, 14, 14, -20
-    };
-    //
     private final CodebookVQ m_codebookVQ;
-    private final CodebookEnergy m_codebookEnergy;
     private final FFT fft;
     //
     private final float[] m_rate_K_sample_freqs_kHz;
@@ -51,17 +44,17 @@ public final class Amp implements IDefines {
     private float m_Wo_left;
     private boolean m_voicing_left;
 
-    private class MBest {
+    protected class MBest {
 
         private final int[] mm_index;
         private float mm_error;
 
-        public MBest() {
+        protected MBest() {
             mm_index = new int[MBEST_STAGES];
             mm_error = 1E32f;
         }
 
-        public void reset() {
+        protected void reset() {
             for (int i = 0; i < MBEST_STAGES; i++) {
                 mm_index[i] = 0;
             }
@@ -69,30 +62,30 @@ public final class Amp implements IDefines {
             mm_error = 1E32f;
         }
 
-        public void resetIndex() {
+        protected void resetIndex() {
             for (int i = 0; i < MBEST_STAGES; i++) {
                 mm_index[i] = i;
             }
         }
 
-        public void setIndex(int ind, int val) {
+        protected void setIndex(int ind, int val) {
             mm_index[ind] = val;
         }
 
-        public int getIndex(int ind) {
+        protected int getIndex(int ind) {
             return mm_index[ind];
         }
 
-        public void setError(float val) {
+        protected void setError(float val) {
             mm_error = val;
         }
 
-        public float getError() {
+        protected float getError() {
             return mm_error;
         }
     }
 
-    public Amp(FFT fftphase) {
+    protected Amp(FFT fftphase) {
         fft = fftphase;
         m_interpolated_surface_ = new float[4][AMP_K];
         m_rate_K_sample_freqs_kHz = new float[AMP_K];
@@ -106,7 +99,6 @@ public final class Amp implements IDefines {
         float mel = MEL200;
 
         m_codebookVQ = new CodebookVQ();
-        m_codebookEnergy = new CodebookEnergy();
 
         for (int k = 0; k < AMP_K; k++) {
             m_rate_K_sample_freqs_kHz[k] = 0.7f * (float) (Math.pow(10.0, (mel / 2595.0f)) - 1.0f);
@@ -114,14 +106,14 @@ public final class Amp implements IDefines {
         }
     }
 
-    public int getAMPK() {
+    protected int getAMPK() {
         return AMP_K;
     }
 
     /**
      * Method to reset the Equalizer values to zero.
      */
-    public void resetEQ() {
+    protected void resetEQ() {
         m_eq = new float[AMP_K]; // init to 0.0
         m_se = 0.0f;
         m_nse = 0L;
@@ -133,19 +125,19 @@ public final class Amp implements IDefines {
      *
      * @return float array containing the Equalizer values.
      */
-    public float[] getEQ() {
+    protected float[] getEQ() {
         return m_eq.clone();
     }
 
-    public float getSquaredError() {
+    protected float getSquaredError() {
         return m_se;
     }
 
-    public long getSquaredCount() {
+    protected long getSquaredCount() {
         return m_nse;
     }
 
-    public void amp_indexes_to_model(Model[] model_, Complex[][] HH, int[] indexes) {
+    protected void amp_indexes_to_model(Model[] model_, Complex[][] HH, int[] indexes) {
         float[] rate_K_vec_ = new float[AMP_K];
         float[] left_vec;
         float[] right_vec;
@@ -213,7 +205,7 @@ public final class Amp implements IDefines {
         }
     }
 
-    public void amp_model_to_indexes(Model model, int[] indexes, boolean eq_en) {
+    protected void amp_model_to_indexes(Model model, int[] indexes, boolean eq_en) {
         float[] rate_K_vec_no_mean = new float[AMP_K];
         float[] rate_K_vec_no_mean_ = new float[AMP_K];
 
@@ -246,8 +238,8 @@ public final class Amp implements IDefines {
 
         m_nse += AMP_K;
 
-        // scalar quantise mean (effectively the frame energy)
-        indexes[2] = quantize(m_codebookEnergy.getCodebook().getCodeBookArray(), mean, m_codebookEnergy.getCodebook().getNumberOfElements());
+        // scalar quantise the mean (effectively the frame energy)
+        indexes[2] = quantizeAmplitude(mean);
 
         // scalar quantise Wo.  We steal the smallest Wo index
         // to signal an unvoiced frame
@@ -290,12 +282,12 @@ public final class Amp implements IDefines {
      * Searches vec[] to a codebook of vectors, and maintains a list of the mbest
      * closest matches.
      */
-    private void mbest_search(float[] cb, float[] vec, int m, MBest[] mbest, int[] index) {
-        for (int j = 0; j < m; j++) {
+    private void mbest_search(ArrayList<Float> cb, float[] vec, MBest[] mbest, int[] index) {
+        for (int j = 0; j < AMP_M; j++) {
             float e = 0.0f;
 
             for (int i = 0; (i < AMP_K) && (e < mbest[MBEST_ENTRIES - 1].getError()); i++) {
-                float diff = cb[j * AMP_K + i] - vec[i];
+                float diff = cb.get(j * AMP_K + i) - vec[i];
                 e += (diff * diff);
             }
 
@@ -414,10 +406,8 @@ public final class Amp implements IDefines {
     }
 
     private void rate_K_mbest_encode(int[] indexes, float[] x, float[] xq) {
-        float[] codebook1 = m_codebookVQ.getCodebook(0).getCodeBookArray();
-        float[] codebook2 = m_codebookVQ.getCodebook(1).getCodeBookArray();
-        float[] target = new float[AMP_K];
-        int[] index = new int[MBEST_STAGES];
+        ArrayList<Float> codebook1 = m_codebookVQ.getCodebook(0).CodeBookArray();
+        ArrayList<Float> codebook2 = m_codebookVQ.getCodebook(1).CodeBookArray();
 
         MBest[] mbest_stage1 = new MBest[MBEST_ENTRIES];
         MBest[] mbest_stage2 = new MBest[MBEST_ENTRIES];
@@ -426,26 +416,30 @@ public final class Amp implements IDefines {
             mbest_stage1[i] = new MBest();
             mbest_stage2[i] = new MBest();
         }
-
+        
+        int[] index = new int[MBEST_STAGES];
+        
         /* Stage 1 */
-        mbest_search(codebook1, x, m_codebookVQ.getCodebook(0).getNumberOfElements(), mbest_stage1, index);
+        mbest_search(codebook1, x, mbest_stage1, index);
 
         /* Stage 2 */
         for (int j = 0; j < MBEST_ENTRIES; j++) {
+            float[] target = new float[AMP_K];
+            
             index[1] = mbest_stage1[j].getIndex(0);
 
             for (int i = 0; i < AMP_K; i++) {
-                target[i] = x[i] - codebook1[AMP_K * index[1] + i];
+                target[i] = x[i] - codebook1.get(AMP_K * index[1] + i);
             }
 
-            mbest_search(codebook2, target, m_codebookVQ.getCodebook(1).getNumberOfElements(), mbest_stage2, index);
+            mbest_search(codebook2, target, mbest_stage2, index);
         }
 
         int n1 = mbest_stage2[0].getIndex(1);
         int n2 = mbest_stage2[0].getIndex(0);
 
         for (int i = 0; i < AMP_K; i++) {
-            xq[i] = (codebook1[AMP_K * n1 + i] + codebook2[AMP_K * n2 + i]);
+            xq[i] = (codebook1.get(AMP_K * n1 + i) + codebook2.get(AMP_K * n2 + i));
         }
 
         indexes[0] = n1;
@@ -596,32 +590,30 @@ public final class Amp implements IDefines {
 
     private void amp_indexes_to_rate_K_vec(float[] rate_K_vec_, int[] indexes) {
         float[] rate_K_vec_no_mean_ = new float[AMP_K];
-        float[] codebook1 = m_codebookVQ.getCodebook(0).getCodeBookArray();
-        float[] codebook2 = m_codebookVQ.getCodebook(1).getCodeBookArray();
+        ArrayList<Float> codebook1 = m_codebookVQ.getCodebook(0).CodeBookArray();
+        ArrayList<Float> codebook2 = m_codebookVQ.getCodebook(1).CodeBookArray();
 
         for (int k = 0; k < AMP_K; k++) {
-            rate_K_vec_no_mean_[k] = (codebook1[AMP_K * indexes[0] + k]
-                    + codebook2[AMP_K * indexes[1] + k]);
+            rate_K_vec_no_mean_[k] = (codebook1.get(AMP_K * indexes[0] + k)
+                    + codebook2.get(AMP_K * indexes[1] + k));
         }
 
         post_filter_amp(rate_K_vec_no_mean_, 1.5f);
 
-        float mean_ = m_codebookEnergy.getCodebook().getCodeBookArray(indexes[2]);
+        float mean_ = CODES0[indexes[2]];
 
         for (int k = 0; k < AMP_K; k++) {
             rate_K_vec_[k] = rate_K_vec_no_mean_[k] + mean_;
         }
     }
-
-    private int quantize(float[] cb, float mean, int m) {
+    
+    private int quantizeAmplitude(float mean) {
         int besti = 0;
         float beste = 1E32f;
 
-        for (int j = 0; j < m; j++) {
-            float e = 0.0f;
-            float diff = cb[j] - mean;
-
-            e += (diff * diff);
+        for (int j = 0; j < CODES0.length; j++) {
+            float diff = CODES0[j] - mean;
+            float e = (diff * diff);
 
             if (e < beste) {
                 beste = e;

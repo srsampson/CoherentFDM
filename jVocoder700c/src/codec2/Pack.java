@@ -14,15 +14,15 @@ public final class Pack {
 
     private int m_bitOffset;
 
-    public Pack() {
+    protected Pack() {
         m_bitOffset = 0;
     }
 
-    public void reset() {
+    protected void reset() {
         m_bitOffset = 0;
     }
 
-    public void pack(byte[] bitArray, int value, int bits) {
+    protected void pack(byte[] bitArray, int value, int bits) {
         int valueBits = bits;
 
         do {
@@ -38,7 +38,7 @@ public final class Pack {
         } while (valueBits != 0);
     }
 
-    public int unpack(byte[] bitArray, int bits) {
+    protected int unpack(byte[] bitArray, int bits) {
         int valueBits = bits;
         int field = 0;
 

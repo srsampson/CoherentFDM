@@ -17,7 +17,6 @@ public final class Codec2 implements IDefines {
     private final Model m_encodeModel;
     private final Model[] m_decodeModels;
     //
-    private final CodebookEnergy m_codebook_energy;
     private final FFT m_fftencode;
     private final FFT m_fftdecode;
     private final FFT m_fftphase;
@@ -40,7 +39,6 @@ public final class Codec2 implements IDefines {
         m_synthesize = new Synthesize(m_fftdecode);
         m_analyze = new Analyze(m_fftencode);
         m_amp = new Amp(m_fftphase);
-        m_codebook_energy = new CodebookEnergy();
 
         m_equalizer = false;          // defaults to off
 
@@ -75,7 +73,7 @@ public final class Codec2 implements IDefines {
     public float codec2_getVariance() {
         long count = m_amp.getSquaredCount();
         
-        if (count != 0) {
+        if (count != 0L) {
             return m_amp.getSquaredError() / (float) count;
         } else {
             return 0.0f;
@@ -208,7 +206,7 @@ public final class Codec2 implements IDefines {
         indexes[2] = m_bitDecode.unpack(bits, 4);
         indexes[3] = m_bitDecode.unpack(bits, 6);
 
-        float mean = m_codebook_energy.getCodebook().getCodeBookArray(indexes[2]) - 10.0f;
+        float mean = CODES0[indexes[2]] - 10.0f;
 
         if (indexes[3] == 0) {
             mean -= 10.0f;

@@ -21,7 +21,7 @@ public final class FFT implements IDefines {
     private final float[] m_c;
     private final int m_n;
 
-    public FFT(int size) {
+    protected FFT(int size) {
         m_n = size;
         m_wtable = new float[4 * m_n + 15];
         m_wtable_r = new float[2 * m_n + 15];
@@ -31,7 +31,7 @@ public final class FFT implements IDefines {
         rffti();
     }
 
-    public void transform(Complex[] a) {
+    protected void transform(Complex[] a) {
         for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
             m_c[i] = a[j].real();
             m_c[i + 1] = a[j].imag();
@@ -44,7 +44,7 @@ public final class FFT implements IDefines {
         }
     }
 
-    public void itransform(Complex[] a) {
+    protected void itransform(Complex[] a) {
         for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
             m_c[i] = a[j].real();
             m_c[i + 1] = a[j].imag();

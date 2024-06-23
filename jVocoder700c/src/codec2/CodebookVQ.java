@@ -12,18 +12,24 @@ package codec2;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-/*
- * I'm using floats here, to save memory space (4 versus 8 bytes each)
- */
-public final class CodebookVQ {
+public final class CodebookVQ implements IDefines {
 
     private Scanner m_scanner;
     private InputStreamReader m_stream;
+    private final ArrayList<Float> m_codes0;
+    private final ArrayList<Float> m_codes1;
+    
+    protected record Codebook(ArrayList<Float> CodeBookArray) {
+
+        public float CodeBookArraySubscript(int index) {
+            return CodeBookArray.get(index);
+        }
+    }
+
     private final Codebook[] m_vqcb;
-    private final float[] m_codes0;
-    private final float[] m_codes1;
 
     /*
      * We have to read these VQ values in, as the number of values is too
@@ -32,7 +38,7 @@ public final class CodebookVQ {
      * These text files are set as resources in the JAR file, so the user
      * doesn't have to maintain them. They are in the package 'codebook'
      */
-    public CodebookVQ() {
+    protected CodebookVQ() {
         m_vqcb = new Codebook[2];
 
         try {
@@ -43,18 +49,15 @@ public final class CodebookVQ {
             System.exit(1);
         }
 
-        int k = m_scanner.nextInt();
-        int m = m_scanner.nextInt();
-        int log2m = (int) (Math.log((double) m) / Math.log(2.0));
-
-        m_codes0 = new float[k * m];
-        m_vqcb[0] = new Codebook(k, log2m, m, m_codes0);
+        m_codes0 = new ArrayList<>(AMP_K * AMP_M); // 10,240 (k * m)
 
         int index = 0;
         while (m_scanner.hasNextFloat()) {
-            m_codes0[index] = m_scanner.nextFloat();
+            m_codes0.set(index, m_scanner.nextFloat());
             index++;
         }
+
+        m_vqcb[0] = new Codebook(m_codes0); // k, log2, m
 
         m_scanner.close();
 
@@ -66,19 +69,16 @@ public final class CodebookVQ {
             System.exit(2);
         }
 
-        k = m_scanner.nextInt();
-        m = m_scanner.nextInt();
-        log2m = (int) (Math.log((double) m) / Math.log(2.0));
-
-        m_codes1 = new float[k * m];
-        m_vqcb[1] = new Codebook(k, log2m, m, m_codes1);
+        m_codes1 = new ArrayList<>(AMP_K * AMP_M); // 10,240 (k * m)
 
         index = 0;
         while (m_scanner.hasNextFloat()) {
-            m_codes1[index] = m_scanner.nextFloat();
+            m_codes1.set(index, m_scanner.nextFloat());
             index++;
         }
-
+        
+        m_vqcb[1] = new Codebook(m_codes1); // k, log2, m
+        
         m_scanner.close();
     }
 
@@ -88,7 +88,7 @@ public final class CodebookVQ {
      * @param index int which is an index reference
      * @return codebook vector quantized codebook
      */
-    public Codebook getCodebook(int index) {
+    protected Codebook getCodebook(int index) {
         return m_vqcb[index];
     }
 }
