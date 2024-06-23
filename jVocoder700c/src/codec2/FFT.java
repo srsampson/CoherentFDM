@@ -14,7 +14,7 @@ import complex.Complex;
 
 public final class FFT implements IDefines {
 
-    public static final int[] FACTORS = {4, 2, 3, 5};
+    private static final int[] FACTORS = {4, 2, 3, 5};
     //
     private final float[] m_wtable;
     private final float[] m_wtable_r;
