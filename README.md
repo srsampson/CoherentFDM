@@ -11,7 +11,7 @@ The modem-out.raw is the test output that can be imported into Audacity (8000 sa
 modem-demod.raw is the test output from decoding the modem output into voice. Use Audacity at 8000 also.   
 These two files are created when running the FDMTest.jar program.
 
-These programs were last compiled with JDK17 and Apache Netbeans IDE 20
+These programs were last compiled with Java SE 21.0.2 and Apache Netbeans IDE 21
 #### Theory
 The modem sends and receives a row of subcarriers 75 times a second. However, it takes six of these rows to make up a modem frame. First, two pilot reference-phase rows (28 bits), then two speech vocoder rows (28 bits), and finally two more rows for the second speech vocoder frame (28 bits). The process then repeats as long as the transmitter Push-To-Talk (PTT) is keyed.
 
