@@ -14,8 +14,6 @@ import complex.Complex;
 
 public final class FFT implements IDefines {
 
-    private static final int[] FACTORS = {4, 2, 3, 5};
-    //
     private final float[] m_wtable;
     private final float[] m_wtable_r;
     private final float[] m_c;
@@ -44,7 +42,9 @@ public final class FFT implements IDefines {
         }
     }
 
-    protected void itransform(Complex[] a) {
+    protected void itransform(Complex[] a, boolean scale) {
+        float sval = 1.0f / (float) m_n; // multiply is faster below
+
         for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
             m_c[i] = a[j].real();
             m_c[i + 1] = a[j].imag();
@@ -52,8 +52,14 @@ public final class FFT implements IDefines {
 
         cfftf(m_c, +1);
 
-        for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
-            a[j] = new Complex(m_c[i], m_c[i + 1]);
+        if (scale == true) {
+            for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
+                a[j] = new Complex(m_c[i] * sval, m_c[i + 1] * sval);   // scale
+            }
+        } else {
+            for (int i = 0, j = 0; i < (m_n * 2); i += 2, j++) {
+                a[j] = new Complex(m_c[i], m_c[i + 1]);   // no scale
+            }
         }
     }
 
@@ -76,7 +82,7 @@ public final class FFT implements IDefines {
             j++;
 
             if (j <= 4) {
-                ntry = FACTORS[j - 1];
+                ntry = FFT_FACTORS[j - 1];
             } else {
                 ntry += 2;
             }
@@ -166,7 +172,7 @@ public final class FFT implements IDefines {
             ++j;
 
             if (j <= 4) {
-                ntry = FACTORS[j - 1];
+                ntry = FFT_FACTORS[j - 1];
             } else {
                 ntry += 2;
             }
@@ -266,39 +272,39 @@ public final class FFT implements IDefines {
             int idl1 = idot * l1;
 
             switch (ip) {
-                case 4:
+                case 4 -> {
                     if (na == 0) {
                         passf4(idot, l1, a, 0, ch, 0, iw, isign);
                     } else {
                         passf4(idot, l1, ch, 0, a, 0, iw, isign);
                     }
                     na = 1 - na;
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     if (na == 0) {
                         passf2(idot, l1, a, 0, ch, 0, iw, isign);
                     } else {
                         passf2(idot, l1, ch, 0, a, 0, iw, isign);
                     }
                     na = 1 - na;
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     if (na == 0) {
                         passf3(idot, l1, a, 0, ch, 0, iw, isign);
                     } else {
                         passf3(idot, l1, ch, 0, a, 0, iw, isign);
                     }
                     na = 1 - na;
-                    break;
-                case 5:
+                }
+                case 5 -> {
                     if (na == 0) {
                         passf5(idot, l1, a, 0, ch, 0, iw, isign);
                     } else {
                         passf5(idot, l1, ch, 0, a, 0, iw, isign);
                     }
                     na = 1 - na;
-                    break;
-                default:
+                }
+                default -> {
                     if (na == 0) {
                         passfg(nac, idot, ip, l1, idl1, a, 0, ch, 0, iw, isign);
                     } else {
@@ -307,7 +313,7 @@ public final class FFT implements IDefines {
                     if (nac[0] == true) {
                         na = 1 - na;
                     }
-                    break;
+                }
             }
 
             l1 = l2;
@@ -578,7 +584,7 @@ public final class FFT implements IDefines {
      passf5: Complex FFT's forward/backward processing of factor 5;
      isign is +1 for backward and -1 for forward transforms
      ----------------------------------------------------------------------*/
-    private void passf5(int ido, int l1, float[] in, int in_off, float[] out, int out_off, int offset, int isign) /* isign==-1 for forward transform and+1 for backward transform */ {
+    private void passf5(int ido, int l1, float[] in, int in_off, float[] out, int out_off, int offset, int isign) {
         float tr11 = 0.309016994374947451262869435595348477f;
         float ti11 = 0.951056516295153531181938433292089030f;
         float tr12 = -0.809016994374947340240566973079694435f;

@@ -300,14 +300,13 @@ public final class Amp implements IDefines {
         Complex[] Sdb = new Complex[AMP_PHASE_NFFT];
         Complex[] cf = new Complex[AMP_PHASE_NFFT];
 
-        // stupid java tricks
+        // initialize values to zero
         for (int i = 0; i < AMP_PHASE_NFFT; i++) {
             Sdb[i] = new Complex();
             cf[i] = new Complex();
         }
 
-        /* install negative frequency components, 1/Nfft takes into
-            account kiss fft lack of scaling on ifft */
+        // install negative frequency components
         Sdb[0] = new Complex(Gdbfk[0], 0.0f);
 
         for (int i = 1; i < NS; i++) {
@@ -316,11 +315,7 @@ public final class Amp implements IDefines {
         }
 
         // compute real cepstrum from log magnitude spectrum
-        fft.itransform(Sdb);
-
-        for (int i = 0; i < AMP_PHASE_NFFT; i++) {
-            Sdb[i] = ComplexMath.divide(Sdb[i], (float) AMP_PHASE_NFFT);
-        }
+        fft.itransform(Sdb, true);
 
         // Fold cepstrum to reflect non-min-phase zeros inside unit circle
         cf[0] = Sdb[0];

@@ -26,6 +26,8 @@ public interface IDefines {
     static final int AMP_M = 512;
     static final int AMP_LOG2 = 9;
     //
+    static final int[] FFT_FACTORS = {4, 2, 3, 5};
+    //
     static final byte[] IDEAL = {
         8, 10, 12, 14, 14, 14, 14,
         14, 14, 14, 14, 14, 14, 14,

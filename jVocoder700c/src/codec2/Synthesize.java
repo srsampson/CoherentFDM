@@ -120,8 +120,8 @@ public final class Synthesize implements IDefines {
             m_Swd[FFT_SIZE - b] = ComplexMath.conjugate(m_Swd[b]);
         }
 
-        // Perform inverse DFT
-        m_fft.itransform(m_Swd);
+        // Perform inverse DFT no scale
+        m_fft.itransform(m_Swd, false);
 
         // Overlap add to previous samples
         for (int i = 0; i < (N_SAMP - 1); i++) {
